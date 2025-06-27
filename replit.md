@@ -105,7 +105,20 @@ The application uses two main tables:
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+- **June 27, 2025**: Initial project setup with full-stack architecture
+- **June 27, 2025**: Built custom image analyzer to replace external API dependency
+- **June 27, 2025**: Fixed payload size limits for image uploads (increased to 50MB)
+- **June 27, 2025**: Added comprehensive local development documentation
+- **June 27, 2025**: Integrated image upload feature with custom React code generation
+
+## User Preferences
+
+- Prefers simple, everyday language for communication
+- Wants to avoid external API dependencies when possible
+- Values self-contained solutions that work locally
+
 ## Changelog
 
-Changelog:
-- June 27, 2025. Initial setup
+- June 27, 2025: Initial setup with custom image analyzer implementation

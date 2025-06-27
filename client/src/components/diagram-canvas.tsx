@@ -46,7 +46,18 @@ export function DiagramCanvas({
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   const onConnect: OnConnect = useCallback(
-    (params) => onEdgesChange([{ type: "add", item: { ...params, id: `e${Date.now()}` } }]),
+    (params) => {
+      if (params.source && params.target) {
+        const newEdge = {
+          id: `e${Date.now()}`,
+          source: params.source as string,
+          target: params.target as string,
+          sourceHandle: params.sourceHandle,
+          targetHandle: params.targetHandle,
+        };
+        onEdgesChange([{ type: "add", item: newEdge }]);
+      }
+    },
     [onEdgesChange]
   );
 
@@ -103,7 +114,7 @@ export function DiagramCanvas({
   }, [onNodeSelect]);
 
   return (
-    <div className="flex-1 relative bg-gray-100" ref={reactFlowWrapper}>
+    <div className="flex-1 relative bg-gray-100" ref={reactFlowWrapper} style={{ width: '100%', height: '100%' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
