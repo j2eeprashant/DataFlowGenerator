@@ -68,8 +68,12 @@ export class MemStorage implements IStorage {
   async createGeneratedCode(insertCode: InsertGeneratedCode): Promise<GeneratedCode> {
     const id = this.currentCodeId++;
     const code: GeneratedCode = {
-      ...insertCode,
       id,
+      diagramId: insertCode.diagramId ?? null,
+      code: insertCode.code,
+      language: insertCode.language || "typescript",
+      componentName: insertCode.componentName,
+      sourceType: insertCode.sourceType || "diagram",
       createdAt: new Date()
     };
     this.generatedCodes.set(id, code);

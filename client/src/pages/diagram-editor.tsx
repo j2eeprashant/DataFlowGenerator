@@ -6,7 +6,9 @@ import { PropertiesPanel } from "@/components/properties-panel";
 import { CodeViewer } from "@/components/code-viewer";
 import { ConsoleOutput } from "@/components/console-output";
 import { useDiagram } from "@/hooks/use-diagram";
+import { socketManager } from "@/lib/socket";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ImageUpload } from "@/components/image-upload";
 
 export default function DiagramEditor() {
   const {
@@ -26,9 +28,10 @@ export default function DiagramEditor() {
     saveDiagram,
     loadDiagram,
     newDiagram,
+    setGeneratedCode,
   } = useDiagram();
 
-  const [activeTab, setActiveTab] = useState<"properties" | "code" | "console">("properties");
+  const [activeTab, setActiveTab] = useState<"properties" | "code" | "console" | "image">("properties");
 
   const handleGenerateCode = useCallback(async () => {
     await generateCode();
@@ -39,6 +42,22 @@ export default function DiagramEditor() {
     await compileAndRun();
     setActiveTab("console");
   }, [compileAndRun]);
+
+  const handleImageCodeGenerated = useCallback((code: string, componentName: string) => {
+    // Update the diagram with the generated code
+    setGeneratedCode(code);
+    setActiveTab("code");
+  }, []);
+
+  const handleImageCompileCode = useCallback((code: string, componentName: string) => {
+    // Use the socket to compile the image-generated code
+    const socket = socketManager.getSocket();
+    socket.emit("compile-code", {
+      code,
+      componentName,
+    });
+    setActiveTab("console");
+  }, []);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -68,8 +87,9 @@ export default function DiagramEditor() {
         {/* Right Panel: Properties & Code */}
         <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="properties">Properties</TabsTrigger>
+              <TabsTrigger value="image">Upload</TabsTrigger>
               <TabsTrigger value="code">Code</TabsTrigger>
               <TabsTrigger value="console">Console</TabsTrigger>
             </TabsList>
@@ -80,6 +100,13 @@ export default function DiagramEditor() {
                 diagramSettings={diagramSettings}
                 onNodeUpdate={onNodeUpdate}
                 onSettingsUpdate={onSettingsUpdate}
+              />
+            </TabsContent>
+
+            <TabsContent value="image" className="flex-1 m-0">
+              <ImageUpload
+                onCodeGenerated={handleImageCodeGenerated}
+                onCompileCode={handleImageCompileCode}
               />
             </TabsContent>
 

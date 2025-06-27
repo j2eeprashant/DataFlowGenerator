@@ -1,4 +1,4 @@
-import { pgTable, text, serial, json, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, json, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -13,10 +13,11 @@ export const diagrams = pgTable("diagrams", {
 
 export const generatedCode = pgTable("generated_code", {
   id: serial("id").primaryKey(),
-  diagramId: serial("diagram_id").references(() => diagrams.id),
+  diagramId: integer("diagram_id").references(() => diagrams.id),
   code: text("code").notNull(),
   language: text("language").notNull().default("typescript"),
   componentName: text("component_name").notNull(),
+  sourceType: text("source_type").default("diagram").notNull(), // 'diagram' or 'image'
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -70,6 +71,14 @@ export const DiagramSettings = z.object({
   useHooks: z.boolean().default(true),
 });
 
+export const ImageUpload = z.object({
+  id: z.string(),
+  file: z.instanceof(File),
+  preview: z.string(),
+  description: z.string().optional(),
+});
+
 export type DiagramNode = z.infer<typeof DiagramNode>;
 export type DiagramConnection = z.infer<typeof DiagramConnection>;
 export type DiagramSettings = z.infer<typeof DiagramSettings>;
+export type ImageUpload = z.infer<typeof ImageUpload>;

@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { insertDiagramSchema, insertGeneratedCodeSchema } from "@shared/schema";
 import { setupSocketHandler } from "./services/socket-handler";
 import { compileCode } from "./services/code-compiler";
+import { analyzeMockupAndGenerateCode } from "./services/image-analyzer";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Diagram CRUD routes
@@ -92,6 +93,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       res.status(500).json({ 
         message: "Compilation failed",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Image upload and analysis route
+  app.post("/api/upload-mockup", async (req, res) => {
+    try {
+      const { image, description } = req.body;
+      
+      if (!image) {
+        return res.status(400).json({ message: "No image provided" });
+      }
+
+      // Extract base64 data from data URL
+      const base64Data = image.replace(/^data:image\/[a-z]+;base64,/, "");
+      
+      // Analyze the mockup and generate code
+      const analysisResult = await analyzeMockupAndGenerateCode(base64Data, "GeneratedComponent");
+      
+      if (analysisResult.success) {
+        // Store the generated code
+        const generatedCode = await storage.createGeneratedCode({
+          diagramId: null, // No diagram associated with image uploads
+          code: analysisResult.code,
+          language: "typescript",
+          componentName: analysisResult.componentName,
+          sourceType: "image",
+        });
+
+        res.json({
+          success: true,
+          componentName: analysisResult.componentName,
+          code: analysisResult.code,
+          description: analysisResult.description,
+          codeId: generatedCode.id
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: "Failed to analyze mockup",
+          error: analysisResult.error
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Image upload failed",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }

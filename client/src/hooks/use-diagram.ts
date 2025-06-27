@@ -85,14 +85,15 @@ export function useDiagram() {
       }
     },
     onSuccess: (response) => {
-      const data = response.json();
-      if (!currentDiagramId) {
-        setCurrentDiagramId(data.id);
-      }
-      queryClient.invalidateQueries({ queryKey: ["/api/diagrams"] });
-      toast({
-        title: "Diagram Saved",
-        description: "Your diagram has been saved successfully.",
+      response.json().then((data) => {
+        if (!currentDiagramId) {
+          setCurrentDiagramId(data.id);
+        }
+        queryClient.invalidateQueries({ queryKey: ["/api/diagrams"] });
+        toast({
+          title: "Diagram Saved",
+          description: "Your diagram has been saved successfully.",
+        });
       });
     },
     onError: () => {
@@ -239,5 +240,6 @@ export function useDiagram() {
     saveDiagram,
     loadDiagram,
     newDiagram,
+    setGeneratedCode,
   };
 }
