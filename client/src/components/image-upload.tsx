@@ -140,7 +140,7 @@ export function ImageUpload({ onCodeGenerated, onCompileCode }: ImageUploadProps
         </p>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 h-0">
         <div className="p-4 space-y-6">
           {/* Image Upload Section */}
           <Card>
