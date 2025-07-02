@@ -6,6 +6,7 @@ import { insertDiagramSchema, insertGeneratedCodeSchema } from "@shared/schema";
 import { setupSocketHandler } from "./services/socket-handler";
 import { compileCode } from "./services/code-compiler";
 import { analyzeMockupAndGenerateCode } from "./services/image-analyzer";
+import { createReactPage } from "./page-generator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Diagram CRUD routes
@@ -101,18 +102,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Image upload and analysis route
   app.post("/api/upload-mockup", async (req, res) => {
     try {
-      const { image, description } = req.body;
-      
+      const { image, description, generatePage } = req.body; // Added generatePage flag
+
       if (!image) {
         return res.status(400).json({ message: "No image provided" });
       }
 
       // Extract base64 data from data URL
       const base64Data = image.replace(/^data:image\/[a-z]+;base64,/, "");
-      
+
       // Analyze the mockup and generate code
       const analysisResult = await analyzeMockupAndGenerateCode(base64Data, "GeneratedComponent");
-      
+
       if (analysisResult.success) {
         // Store the generated code
         const generatedCode = await storage.createGeneratedCode({
@@ -123,12 +124,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sourceType: "image",
         });
 
+        let pageRoute: string | undefined = undefined;
+
+        if (generatePage) {
+          // Create a React page with a route
+          pageRoute = `/${analysisResult.componentName.toLowerCase()}`;
+          await createReactPage(analysisResult.code, analysisResult.componentName, pageRoute);
+        }
+
         res.json({
           success: true,
-          componentName: analysisResult.componentName,
           code: analysisResult.code,
-          description: analysisResult.description,
-          codeId: generatedCode.id
+          componentName: analysisResult.componentName,
+          id: generatedCode.id,
+          route: generatePage ? pageRoute : undefined,
         });
       } else {
         res.status(500).json({
@@ -146,7 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
-  
+
   // Setup Socket.IO for real-time communication
   const io = new SocketIOServer(httpServer, {
     cors: {

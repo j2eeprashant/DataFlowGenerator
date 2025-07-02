@@ -9,6 +9,7 @@ import { useDiagram } from "@/hooks/use-diagram";
 import { socketManager } from "@/lib/socket";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImageUpload } from "@/components/image-upload";
+import { PageNavigation } from "@/components/page-navigation";
 
 export default function DiagramEditor() {
   const {
@@ -73,7 +74,10 @@ export default function DiagramEditor() {
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel: Node Palette */}
-        <NodePalette />
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+          <PageNavigation />
+          <NodePalette />
+        </div>
 
         {/* Center: Canvas Area */}
         <DiagramCanvas

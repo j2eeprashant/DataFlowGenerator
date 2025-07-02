@@ -84,6 +84,7 @@ export function ImageUpload({ onCodeGenerated, onCompileCode }: ImageUploadProps
       const response = await apiRequest("POST", "/api/upload-mockup", {
         image: imagePreview,
         description: description || undefined,
+        generatePage: true, // Flag to generate a full page with route
       });
 
       const data = await response.json();
@@ -93,11 +94,15 @@ export function ImageUpload({ onCodeGenerated, onCompileCode }: ImageUploadProps
         setComponentName(data.componentName);
         setAnalysisDescription(data.description);
         onCodeGenerated(data.code, data.componentName);
-        
+
         toast({
           title: "Code Generated Successfully",
           description: `Created component: ${data.componentName}`,
         });
+         // Show success message with route info
+         if (data.route) {
+          console.log(`Page created with route: ${data.route}`);
+        }
       } else {
         throw new Error(data.message || "Failed to analyze mockup");
       }
@@ -218,7 +223,7 @@ export function ImageUpload({ onCodeGenerated, onCompileCode }: ImageUploadProps
               )}
               {isUploading ? "Analyzing..." : "Generate Code"}
             </Button>
-            
+
             {generatedCode && (
               <Button
                 onClick={handleCompileAndRun}
