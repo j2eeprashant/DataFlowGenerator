@@ -90,15 +90,15 @@ export default function DiagramEditor() {
 
         {/* Right Panel: Properties & Code */}
         <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-            <TabsList className="grid w-full grid-cols-4">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="flex flex-col h-full">
+            <TabsList className="grid w-full grid-cols-4 flex-shrink-0">
               <TabsTrigger value="properties">Properties</TabsTrigger>
               <TabsTrigger value="image">Upload</TabsTrigger>
               <TabsTrigger value="code">Code</TabsTrigger>
               <TabsTrigger value="console">Console</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="properties" className="flex-1 m-0">
+            <TabsContent value="properties" className="flex-1 m-0 h-0">
               <PropertiesPanel
                 selectedNode={selectedNode}
                 diagramSettings={diagramSettings}
@@ -107,18 +107,18 @@ export default function DiagramEditor() {
               />
             </TabsContent>
 
-            <TabsContent value="image" className="flex-1 m-0">
+            <TabsContent value="image" className="flex-1 m-0 h-0">
               <ImageUpload
                 onCodeGenerated={handleImageCodeGenerated}
                 onCompileCode={handleImageCompileCode}
               />
             </TabsContent>
 
-            <TabsContent value="code" className="flex-1 m-0">
+            <TabsContent value="code" className="flex-1 m-0 h-0">
               <CodeViewer code={generatedCode} />
             </TabsContent>
 
-            <TabsContent value="console" className="flex-1 m-0">
+            <TabsContent value="console" className="flex-1 m-0 h-0">
               <ConsoleOutput logs={consoleOutput} />
             </TabsContent>
           </Tabs>
