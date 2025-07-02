@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Upload, X, Code, Play, Loader2 } from "lucide-react";
+import { Upload, X, Code, Play, Loader2, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { socketManager } from "@/lib/socket";
@@ -23,6 +23,7 @@ export function ImageUpload({ onCodeGenerated, onCompileCode }: ImageUploadProps
   const [generatedCode, setGeneratedCode] = useState("");
   const [componentName, setComponentName] = useState("");
   const [analysisDescription, setAnalysisDescription] = useState("");
+  const [generatedRoute, setGeneratedRoute] = useState("");
 
   const { toast } = useToast();
 
@@ -66,6 +67,7 @@ export function ImageUpload({ onCodeGenerated, onCompileCode }: ImageUploadProps
     setGeneratedCode("");
     setComponentName("");
     setAnalysisDescription("");
+    setGeneratedRoute("");
   }, []);
 
   const handleUploadAndAnalyze = useCallback(async () => {
@@ -93,11 +95,12 @@ export function ImageUpload({ onCodeGenerated, onCompileCode }: ImageUploadProps
         setGeneratedCode(data.code);
         setComponentName(data.componentName);
         setAnalysisDescription(data.description);
+        setGeneratedRoute(data.route || "");
         onCodeGenerated(data.code, data.componentName);
 
         toast({
           title: "Code Generated Successfully",
-          description: `Created component: ${data.componentName}`,
+          description: data.route ? `Created page at ${data.route}` : `Created component: ${data.componentName}`,
         });
          // Show success message with route info
          if (data.route) {
@@ -210,11 +213,11 @@ export function ImageUpload({ onCodeGenerated, onCompileCode }: ImageUploadProps
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex space-x-2">
+          <div className="space-y-2">
             <Button
               onClick={handleUploadAndAnalyze}
               disabled={!selectedImage || isUploading}
-              className="flex-1"
+              className="w-full"
             >
               {isUploading ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -225,14 +228,27 @@ export function ImageUpload({ onCodeGenerated, onCompileCode }: ImageUploadProps
             </Button>
 
             {generatedCode && (
-              <Button
-                onClick={handleCompileAndRun}
-                variant="outline"
-                className="flex-1"
-              >
-                <Play className="w-4 h-4 mr-2" />
-                Compile & Run
-              </Button>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={handleCompileAndRun}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Compile & Run
+                </Button>
+                
+                {generatedRoute && (
+                  <Button
+                    onClick={() => window.open(generatedRoute, '_blank')}
+                    variant="default"
+                    className="flex-1"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Preview Page
+                  </Button>
+                )}
+              </div>
             )}
           </div>
 
@@ -261,6 +277,14 @@ export function ImageUpload({ onCodeGenerated, onCompileCode }: ImageUploadProps
                     {generatedCode.split('\n').length} lines of TypeScript React code generated
                   </div>
                 </div>
+                {generatedRoute && (
+                  <div>
+                    <Label className="text-xs font-medium text-gray-600">Generated Page</Label>
+                    <p className="text-sm font-mono bg-gray-100 p-2 rounded mt-1">
+                      Route: {generatedRoute}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

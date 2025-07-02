@@ -129,7 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (generatePage) {
           // Create a React page with a route
           pageRoute = `/${analysisResult.componentName.toLowerCase()}`;
-          await createReactPage(analysisResult.code, analysisResult.componentName, pageRoute);
+          await createReactPage(analysisResult.componentName, analysisResult.code, pageRoute);
         }
 
         res.json({
