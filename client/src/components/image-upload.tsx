@@ -133,14 +133,14 @@ export function ImageUpload({ onCodeGenerated, onCompileCode }: ImageUploadProps
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200 flex-shrink-0">
         <h2 className="text-lg font-semibold text-gray-800">Upload Mockup</h2>
         <p className="text-sm text-gray-600 mt-1">
           Upload a UI mockup image to generate React code automatically
         </p>
       </div>
 
-      <ScrollArea className="flex-1 h-0">
+      <div className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-6">
           {/* Image Upload Section */}
           <Card>
@@ -265,7 +265,7 @@ export function ImageUpload({ onCodeGenerated, onCompileCode }: ImageUploadProps
             </Card>
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
