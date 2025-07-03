@@ -10,6 +10,7 @@ import { socketManager } from "@/lib/socket";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImageUpload } from "@/components/image-upload";
 import { PageNavigation } from "@/components/page-navigation";
+import { ProjectExplorer } from "@/components/project-explorer";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -36,6 +37,7 @@ export default function DiagramEditor() {
 
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"properties" | "code" | "console" | "image">("properties");
+  const [leftPanelTab, setLeftPanelTab] = useState<"nodes" | "projects">("nodes");
 
   const handleGenerateCode = useCallback(async () => {
     await generateCode();
@@ -100,10 +102,23 @@ export default function DiagramEditor() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel: Node Palette */}
+        {/* Left Panel: Node Palette & Project Explorer */}
         <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
           <PageNavigation />
-          <NodePalette />
+          <Tabs value={leftPanelTab} onValueChange={(value) => setLeftPanelTab(value as any)} className="flex flex-col h-full">
+            <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
+              <TabsTrigger value="nodes">Nodes</TabsTrigger>
+              <TabsTrigger value="projects">Projects</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="nodes" className="flex-1 m-0 h-0">
+              <NodePalette />
+            </TabsContent>
+
+            <TabsContent value="projects" className="flex-1 m-0 h-0">
+              <ProjectExplorer />
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Center: Canvas Area */}

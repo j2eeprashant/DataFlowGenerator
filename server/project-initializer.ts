@@ -163,3 +163,127 @@ export async function createCustomReactProject(projectName: string): Promise<Pro
     };
   }
 }
+
+export async function getProjectsList(): Promise<any[]> {
+  try {
+    const projectsDir = path.join(process.cwd(), "generated-projects");
+    
+    // Check if projects directory exists
+    try {
+      await fs.access(projectsDir);
+    } catch {
+      // Directory doesn't exist, return empty array
+      return [];
+    }
+    
+    const entries = await fs.readdir(projectsDir, { withFileTypes: true });
+    const projects = [];
+    
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const projectPath = path.join(projectsDir, entry.name);
+        const packageJsonPath = path.join(projectPath, "package.json");
+        
+        try {
+          // Check if it's a valid React project
+          await fs.access(packageJsonPath);
+          const stat = await fs.stat(projectPath);
+          
+          // Read package.json to get project type
+          const packageContent = await fs.readFile(packageJsonPath, "utf-8");
+          const packageJson = JSON.parse(packageContent);
+          
+          projects.push({
+            name: entry.name,
+            path: projectPath,
+            type: packageJson.dependencies?.react ? "React Project" : "Node Project",
+            lastModified: stat.mtime.toISOString(),
+          });
+        } catch {
+          // Skip invalid projects
+          continue;
+        }
+      }
+    }
+    
+    return projects;
+  } catch (error) {
+    console.error("Error listing projects:", error);
+    return [];
+  }
+}
+
+export async function getProjectFiles(projectName: string): Promise<any[]> {
+  try {
+    const projectPath = path.join(process.cwd(), "generated-projects", projectName);
+    
+    // Verify project exists
+    await fs.access(projectPath);
+    
+    const files = await scanDirectory(projectPath, projectPath);
+    return files;
+  } catch (error) {
+    console.error("Error reading project files:", error);
+    throw new Error(`Failed to read files for project: ${projectName}`);
+  }
+}
+
+async function scanDirectory(dirPath: string, basePath: string, maxDepth = 3, currentDepth = 0): Promise<any[]> {
+  if (currentDepth >= maxDepth) {
+    return [];
+  }
+  
+  try {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    const items = [];
+    
+    for (const entry of entries) {
+      // Skip node_modules, .git, and other common directories
+      if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === 'build' || entry.name === 'dist') {
+        continue;
+      }
+      
+      const fullPath = path.join(dirPath, entry.name);
+      const relativePath = path.relative(basePath, fullPath);
+      
+      if (entry.isDirectory()) {
+        const children = await scanDirectory(fullPath, basePath, maxDepth, currentDepth + 1);
+        items.push({
+          name: entry.name,
+          type: 'directory',
+          path: relativePath,
+          children,
+          expanded: currentDepth < 2, // Auto-expand first 2 levels
+        });
+      } else {
+        items.push({
+          name: entry.name,
+          type: 'file',
+          path: relativePath,
+        });
+      }
+    }
+    
+    return items;
+  } catch (error) {
+    console.error(`Error scanning directory ${dirPath}:`, error);
+    return [];
+  }
+}
+
+export async function deleteProject(projectName: string): Promise<void> {
+  try {
+    const projectPath = path.join(process.cwd(), "generated-projects", projectName);
+    
+    // Verify project exists
+    await fs.access(projectPath);
+    
+    // Delete the entire project directory
+    await fs.rm(projectPath, { recursive: true, force: true });
+    
+    console.log(`Project deleted: ${projectPath}`);
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    throw new Error(`Failed to delete project: ${projectName}`);
+  }
+}

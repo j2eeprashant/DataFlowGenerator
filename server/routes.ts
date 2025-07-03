@@ -7,7 +7,7 @@ import { setupSocketHandler } from "./services/socket-handler";
 import { compileCode } from "./services/code-compiler";
 import { analyzeMockupAndGenerateCode } from "./services/image-analyzer";
 import { createReactPage } from "./page-generator";
-import { initializeReactProject } from "./project-initializer";
+import { initializeReactProject, getProjectsList, getProjectFiles, deleteProject } from "./project-initializer";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Diagram CRUD routes
@@ -176,6 +176,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : "Unknown error occurred",
+      });
+    }
+  });
+
+  // Project management routes
+  app.get("/api/projects", async (req, res) => {
+    try {
+      const projects = await getProjectsList();
+      res.json({
+        success: true,
+        projects,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to list projects",
+      });
+    }
+  });
+
+  app.get("/api/projects/:name/files", async (req, res) => {
+    try {
+      const projectName = req.params.name;
+      const files = await getProjectFiles(projectName);
+      res.json({
+        success: true,
+        files,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to load project files",
+      });
+    }
+  });
+
+  app.delete("/api/projects/:name", async (req, res) => {
+    try {
+      const projectName = req.params.name;
+      await deleteProject(projectName);
+      res.json({
+        success: true,
+        message: `Project "${projectName}" deleted successfully`,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to delete project",
       });
     }
   });
