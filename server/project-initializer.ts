@@ -253,7 +253,7 @@ async function scanDirectory(dirPath: string, basePath: string, maxDepth = 3, cu
           type: 'directory',
           path: relativePath,
           children,
-          expanded: currentDepth < 2, // Auto-expand first 2 levels
+          expanded: currentDepth === 0, // Auto-expand only root level
         });
       } else {
         items.push({

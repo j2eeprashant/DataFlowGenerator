@@ -107,9 +107,11 @@ export function ProjectExplorer() {
     window.open(`/project/${encodeURIComponent(project.name)}`, '_blank');
   };
 
-  const getFileIcon = (fileName: string, type: string) => {
+  const getFileIcon = (fileName: string, type: string, isExpanded?: boolean) => {
     if (type === 'directory') {
-      return <Folder className="w-4 h-4 text-blue-500" />;
+      return isExpanded ? 
+        <FolderOpen className="w-4 h-4 text-blue-500" /> : 
+        <Folder className="w-4 h-4 text-blue-500" />;
     }
 
     const extension = fileName.split('.').pop()?.toLowerCase();
@@ -123,19 +125,57 @@ export function ProjectExplorer() {
         return <FileText className="w-4 h-4 text-green-500" />;
       case 'md':
         return <FileText className="w-4 h-4 text-blue-400" />;
+      case 'css':
+        return <FileText className="w-4 h-4 text-purple-500" />;
+      case 'html':
+        return <FileCode className="w-4 h-4 text-red-500" />;
       default:
         return <File className="w-4 h-4 text-gray-500" />;
     }
   };
 
+  const toggleFolder = (targetPath: string) => {
+    setFileTree(prevTree => {
+      const updateTree = (items: FileSystemItem[]): FileSystemItem[] => {
+        return items.map(item => {
+          if (item.path === targetPath && item.type === 'directory') {
+            return { ...item, expanded: !item.expanded };
+          }
+          if (item.children) {
+            return { ...item, children: updateTree(item.children) };
+          }
+          return item;
+        });
+      };
+      return updateTree(prevTree);
+    });
+  };
+
   const renderFileTree = (items: FileSystemItem[], depth = 0) => {
     return items.map((item, index) => (
-      <div key={`${item.path}-${index}`} style={{ paddingLeft: `${depth * 16}px` }}>
-        <div className="flex items-center py-1 px-2 hover:bg-gray-100 rounded text-sm">
-          {getFileIcon(item.name, item.type)}
-          <span className="ml-2 truncate">{item.name}</span>
+      <div key={`${item.path}-${index}`}>
+        <div 
+          className={`flex items-center py-1 px-2 hover:bg-gray-100 rounded text-sm cursor-pointer ${
+            item.type === 'directory' ? 'font-medium' : ''
+          }`}
+          style={{ paddingLeft: `${depth * 16 + 8}px` }}
+          onClick={() => item.type === 'directory' ? toggleFolder(item.path) : undefined}
+        >
+          <div className="flex items-center min-w-0 flex-1">
+            {item.type === 'directory' && (
+              <span className="mr-1 text-gray-400">
+                {item.expanded ? '▼' : '▶'}
+              </span>
+            )}
+            {getFileIcon(item.name, item.type, item.expanded)}
+            <span className="ml-2 truncate" title={item.name}>{item.name}</span>
+          </div>
         </div>
-        {item.children && item.expanded && renderFileTree(item.children, depth + 1)}
+        {item.children && item.expanded && (
+          <div>
+            {renderFileTree(item.children, depth + 1)}
+          </div>
+        )}
       </div>
     ));
   };
@@ -236,12 +276,14 @@ export function ProjectExplorer() {
                   Files - {selectedProject.name}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-2">
                 {fileTree.length === 0 ? (
-                  <div className="text-sm text-gray-500">No files found</div>
+                  <div className="text-sm text-gray-500 p-4">No files found</div>
                 ) : (
-                  <div className="max-h-96 overflow-y-auto">
-                    {renderFileTree(fileTree)}
+                  <div className="max-h-96 overflow-y-auto bg-gray-50 rounded border">
+                    <div className="p-2">
+                      {renderFileTree(fileTree)}
+                    </div>
                   </div>
                 )}
               </CardContent>
