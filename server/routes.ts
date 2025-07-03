@@ -7,6 +7,7 @@ import { setupSocketHandler } from "./services/socket-handler";
 import { compileCode } from "./services/code-compiler";
 import { analyzeMockupAndGenerateCode } from "./services/image-analyzer";
 import { createReactPage } from "./page-generator";
+import { initializeReactProject } from "./project-initializer";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Diagram CRUD routes
@@ -150,6 +151,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         message: "Image upload failed",
         error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // React project initialization route
+  app.post("/api/init-project", async (req, res) => {
+    try {
+      const result = await initializeReactProject();
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          message: result.message,
+          projectPath: result.projectPath,
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: result.error,
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error occurred",
       });
     }
   });

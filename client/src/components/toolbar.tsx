@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Plus, FolderOpen, Save, Code, Play } from "lucide-react";
+import { Plus, FolderOpen, Save, Code, Play, Rocket } from "lucide-react";
 
 interface ToolbarProps {
   onNew: () => void;
@@ -8,6 +8,7 @@ interface ToolbarProps {
   onSave: () => void;
   onGenerateCode: () => void;
   onCompileAndRun: () => void;
+  onInitProject: () => void;
 }
 
 export function Toolbar({
@@ -16,6 +17,7 @@ export function Toolbar({
   onSave,
   onGenerateCode,
   onCompileAndRun,
+  onInitProject,
 }: ToolbarProps) {
   return (
     <header className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between shadow-sm">
@@ -41,6 +43,10 @@ export function Toolbar({
           <Button variant="ghost" size="sm" onClick={onSave}>
             <Save className="w-4 h-4 mr-1" />
             Save
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onInitProject}>
+            <Rocket className="w-4 h-4 mr-1" />
+            Init React Project
           </Button>
         </div>
       </div>

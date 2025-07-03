@@ -10,6 +10,8 @@ import { socketManager } from "@/lib/socket";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImageUpload } from "@/components/image-upload";
 import { PageNavigation } from "@/components/page-navigation";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function DiagramEditor() {
   const {
@@ -32,6 +34,7 @@ export default function DiagramEditor() {
     setGeneratedCode,
   } = useDiagram();
 
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"properties" | "code" | "console" | "image">("properties");
 
   const handleGenerateCode = useCallback(async () => {
@@ -60,6 +63,29 @@ export default function DiagramEditor() {
     setActiveTab("console");
   }, []);
 
+  const handleInitProject = useCallback(async () => {
+    try {
+      const response = await apiRequest("POST", "/api/init-project", {});
+      const data = await response.json();
+      
+      if (data.success) {
+        toast({
+          title: "Project Initialized",
+          description: data.message || "React project has been successfully created",
+        });
+        setActiveTab("console");
+      } else {
+        throw new Error(data.error || "Failed to initialize project");
+      }
+    } catch (error) {
+      toast({
+        title: "Initialization Failed",
+        description: error instanceof Error ? error.message : "Failed to initialize React project",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header Toolbar */}
@@ -69,6 +95,7 @@ export default function DiagramEditor() {
         onSave={saveDiagram}
         onGenerateCode={handleGenerateCode}
         onCompileAndRun={handleCompileAndRun}
+        onInitProject={handleInitProject}
       />
 
       {/* Main Content Area */}
