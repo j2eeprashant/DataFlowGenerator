@@ -40,7 +40,7 @@ export function ProjectExplorer() {
   const loadProjects = async () => {
     setIsLoading(true);
     try {
-      const response = await apiRequest("GET", "/api/projects", {});
+      const response = await fetch("/api/projects");
       const data = await response.json();
       
       if (data.success) {
@@ -55,7 +55,7 @@ export function ProjectExplorer() {
 
   const loadProjectFiles = async (project: ProjectInfo) => {
     try {
-      const response = await apiRequest("GET", `/api/projects/${encodeURIComponent(project.name)}/files`, {});
+      const response = await fetch(`/api/projects/${encodeURIComponent(project.name)}/files`);
       const data = await response.json();
       
       if (data.success) {
