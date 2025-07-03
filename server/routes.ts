@@ -7,7 +7,7 @@ import { setupSocketHandler } from "./services/socket-handler";
 import { compileCode } from "./services/code-compiler";
 import { analyzeMockupAndGenerateCode } from "./services/image-analyzer";
 import { createReactPage } from "./page-generator";
-import { initializeReactProject, getProjectsList, getProjectFiles, deleteProject } from "./project-initializer";
+import { initializeReactProject, getProjectsList, getProjectFiles, deleteProject, renameProject } from "./project-initializer";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Diagram CRUD routes
@@ -224,6 +224,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         error: error instanceof Error ? error.message : "Failed to delete project",
+      });
+    }
+  });
+
+  app.patch("/api/projects/:name/rename", async (req, res) => {
+    try {
+      const oldName = req.params.name;
+      const { newName } = req.body;
+
+      if (!newName || typeof newName !== 'string' || !newName.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: "New name is required and must be a non-empty string",
+        });
+      }
+
+      await renameProject(oldName, newName.trim());
+      res.json({
+        success: true,
+        message: `Project renamed from "${oldName}" to "${newName.trim()}"`,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to rename project",
       });
     }
   });

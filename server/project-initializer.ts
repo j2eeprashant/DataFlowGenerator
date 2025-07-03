@@ -287,3 +287,48 @@ export async function deleteProject(projectName: string): Promise<void> {
     throw new Error(`Failed to delete project: ${projectName}`);
   }
 }
+
+export async function renameProject(oldName: string, newName: string): Promise<void> {
+  try {
+    // Clean the new project name (remove special characters)
+    const cleanNewName = newName.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
+    
+    const oldProjectPath = path.join(process.cwd(), "generated-projects", oldName);
+    const newProjectPath = path.join(process.cwd(), "generated-projects", cleanNewName);
+    
+    // Verify old project exists
+    await fs.access(oldProjectPath);
+    
+    // Check if new name already exists
+    try {
+      await fs.access(newProjectPath);
+      throw new Error(`A project with name '${cleanNewName}' already exists`);
+    } catch (error) {
+      // If it throws an error, the project doesn't exist, which is what we want
+      if (error instanceof Error && error.message.includes('already exists')) {
+        throw error; // Re-throw if it's our custom error
+      }
+      // Otherwise, continue with rename
+    }
+    
+    // Rename the project directory
+    await fs.rename(oldProjectPath, newProjectPath);
+    
+    // Update package.json name field
+    const packageJsonPath = path.join(newProjectPath, "package.json");
+    try {
+      const packageContent = await fs.readFile(packageJsonPath, "utf-8");
+      const packageJson = JSON.parse(packageContent);
+      packageJson.name = cleanNewName;
+      await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
+    } catch (error) {
+      console.warn("Could not update package.json name field:", error);
+      // Don't fail the rename if we can't update package.json
+    }
+    
+    console.log(`Project renamed from '${oldName}' to '${cleanNewName}'`);
+  } catch (error) {
+    console.error("Error renaming project:", error);
+    throw new Error(`Failed to rename project: ${error instanceof Error ? error.message : "Unknown error"}`);
+  }
+}

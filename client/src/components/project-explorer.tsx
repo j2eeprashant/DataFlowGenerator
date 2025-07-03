@@ -10,7 +10,8 @@ import {
   FileCode, 
   RefreshCw,
   ExternalLink,
-  Trash2
+  Trash2,
+  Edit2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -35,6 +36,8 @@ export function ProjectExplorer() {
   const [selectedProject, setSelectedProject] = useState<ProjectInfo | null>(null);
   const [fileTree, setFileTree] = useState<FileSystemItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [renamingProject, setRenamingProject] = useState<string | null>(null);
+  const [newName, setNewName] = useState("");
   const { toast } = useToast();
 
   const loadProjects = async () => {
@@ -98,6 +101,50 @@ export function ProjectExplorer() {
       toast({
         title: "Delete Failed",
         description: error instanceof Error ? error.message : "Failed to delete project",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const startRename = (project: ProjectInfo) => {
+    setRenamingProject(project.name);
+    setNewName(project.name);
+  };
+
+  const cancelRename = () => {
+    setRenamingProject(null);
+    setNewName("");
+  };
+
+  const renameProject = async (oldName: string) => {
+    if (!newName.trim() || newName === oldName) {
+      cancelRename();
+      return;
+    }
+
+    try {
+      const response = await apiRequest("PATCH", `/api/projects/${encodeURIComponent(oldName)}/rename`, {
+        newName: newName.trim()
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        toast({
+          title: "Project Renamed",
+          description: `Project renamed from "${oldName}" to "${newName.trim()}"`,
+        });
+        loadProjects();
+        if (selectedProject?.name === oldName) {
+          setSelectedProject({ ...selectedProject, name: newName.trim() });
+        }
+        cancelRename();
+      } else {
+        throw new Error(data.error || "Failed to rename project");
+      }
+    } catch (error) {
+      toast({
+        title: "Rename Failed",
+        description: error instanceof Error ? error.message : "Failed to rename project",
         variant: "destructive",
       });
     }
@@ -218,7 +265,7 @@ export function ProjectExplorer() {
                 projects.map((project, index) => (
                   <div
                     key={index}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                    className={`p-3 border rounded-lg transition-colors ${
                       selectedProject?.name === project.name
                         ? 'bg-blue-50 border-blue-200'
                         : 'hover:bg-gray-50'
@@ -226,12 +273,31 @@ export function ProjectExplorer() {
                   >
                     <div className="flex items-center justify-between">
                       <div 
-                        className="flex-1" 
-                        onClick={() => loadProjectFiles(project)}
+                        className="flex-1 cursor-pointer" 
+                        onClick={() => !renamingProject && loadProjectFiles(project)}
                       >
                         <div className="flex items-center">
                           <FolderOpen className="w-4 h-4 text-blue-500 mr-2" />
-                          <span className="font-medium text-sm">{project.name}</span>
+                          {renamingProject === project.name ? (
+                            <input
+                              type="text"
+                              value={newName}
+                              onChange={(e) => setNewName(e.target.value)}
+                              onBlur={() => renameProject(project.name)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  renameProject(project.name);
+                                } else if (e.key === 'Escape') {
+                                  cancelRename();
+                                }
+                              }}
+                              className="font-medium text-sm bg-white border border-blue-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              autoFocus
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          ) : (
+                            <span className="font-medium text-sm">{project.name}</span>
+                          )}
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
                           {project.type} • Modified: {new Date(project.lastModified).toLocaleDateString()}
@@ -248,6 +314,17 @@ export function ProjectExplorer() {
                           className="h-6 w-6 p-0"
                         >
                           <ExternalLink className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startRename(project);
+                          }}
+                          className="h-6 w-6 p-0 text-blue-500 hover:text-blue-700"
+                        >
+                          <Edit2 className="w-3 h-3" />
                         </Button>
                         <Button
                           variant="ghost"
